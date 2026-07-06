@@ -8,8 +8,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@balaur/tokens": "workspace:*",
-    "@balaur/ui": "workspace:*",
+    "@balaur/tokens": "link:@balaur/tokens",
+    "@balaur/ui": "link:@balaur/ui",
     "react": "^19",
     "react-dom": "^19"
   },

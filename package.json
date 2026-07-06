@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*",
     "apps/*"
   ],
   "engines": {
@@ -17,7 +16,6 @@
     "fmt": "biome format --write .",
     "check": "bun run typecheck && bun run lint && bun test",
     "dev": "bun run --filter '@balaur/web' dev",
-    "storybook": "bun run --filter '@balaur/ui' storybook",
     "build": "bun run --filter '*' build"
   },
   "devDependencies": {
@@ -26,6 +24,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "balaur-memory": "github:balaur-software/memory#v0.4.3"
+    "balaur-memory": "github:balaur-software/memory#v0.4.3",
+    "@balaur/octant-core": "link:@balaur/octant-core",
+    "@balaur/tokens": "link:@balaur/tokens",
+    "@balaur/ui": "link:@balaur/ui"
   }
 }

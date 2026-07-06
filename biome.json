@@ -10,7 +10,6 @@
   },
   "files": {
     "includes": [
-      "packages/**/*.{ts,tsx,json}",
       "apps/**/*.{ts,tsx,json}",
       "*.json",
       "!**/node_modules",
