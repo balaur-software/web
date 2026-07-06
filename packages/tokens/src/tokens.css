@@ -25,12 +25,25 @@
   --bx-surface-5: #131419;
   --bx-surface-6: #15161e;
   --bx-surface-7: #1a1b22;
+  /* Semantic surfaces (off-ramp): interactive/table states. */
+  --bx-surface-hover: #0f1014; /* row hover (between surface-3 and -4) */
+  --bx-surface-stripe: #0b0c10; /* table zebra (between surface-1 and -2) */
+
+  /* ---- Status tints (subtle status backgrounds) ---- */
+  --bx-accent-tint: #0e140e; /* success / accent wash */
+  --bx-danger-tint: #1f1416; /* danger wash */
 
   /* ---- Borders / hairlines ---- */
   --bx-border: #1c1d24;
   --bx-border-strong: #23252e;
-  --bx-border-accent: #2a3320;
+  --bx-border-mid: #2a2c34; /* mid hairline, between -strong and -bright */
+  --bx-border-accent: #2a3320; /* green-tinted (parallels the accent) */
   --bx-border-bright: #33353f;
+  /* Per-hue accent-tinted borders (parallel --bx-border-accent). */
+  --bx-border-cyan: #1d3540;
+  --bx-border-magenta: #3a2540;
+  --bx-border-yellow: #3a3520;
+  --bx-border-red: #3a2020;
   --bx-border-width: 1px;
   --bx-border-width-strong: 2px;
 
@@ -42,6 +55,11 @@
   --bx-text-5: #7b8290;
   --bx-text-6: #5b616e;
   --bx-text-7: #3f424d;
+  /* Off-ramp interstitial grays (brightest -> dimmest) not on the numbered ramp. */
+  --bx-text-dim-1: #aab0bd; /* between text-3 and text-4 */
+  --bx-text-dim-2: #6b7180; /* between text-5 and text-6 */
+  --bx-text-dim-3: #4b505c; /* between text-6 and text-7 */
+  --bx-text-dim-4: #363943; /* below text-7 */
 
   /* ---- ANSI 16-color palette (index 0..15) ---- */
   --bx-ansi-0: #15161e; /* black */
@@ -62,6 +80,12 @@
   --bx-ansi-15: #f4f6fb; /* br.white */
 
   /* ---- Accent (default: green). Override --bx-accent to reskin ---- */
+  /*
+   * tokens.css ships the green default, but `amber` (#ffb000 / bright #ffc94d)
+   * is an equally first-class accent option — along with cyan — injected at
+   * runtime by `accentVars()` (see accent.ts), which swaps --bx-accent and
+   * --bx-accent-bright. No CSS change is needed to reskin to amber.
+   */
   --bx-accent: #46c66d;
   --bx-accent-bright: #74e692;
 

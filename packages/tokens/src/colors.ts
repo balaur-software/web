@@ -24,6 +24,18 @@ export const surfaces = {
   surface6: "#15161e",
   /** Elevated surface (hover, active rows). `--bx-surface-7` */
   surface7: "#1a1b22",
+  /** Row hover fill (off-ramp, between surface3 and surface4). `--bx-surface-hover` */
+  hover: "#0f1014",
+  /** Table zebra stripe (off-ramp, between surface1 and surface2). `--bx-surface-stripe` */
+  stripe: "#0b0c10",
+} as const;
+
+/** Subtle status-tint background washes. */
+export const tints = {
+  /** Success / accent wash. `--bx-accent-tint` */
+  accent: "#0e140e",
+  /** Danger wash. `--bx-danger-tint` */
+  danger: "#1f1416",
 } as const;
 
 /** Border / hairline colors. */
@@ -32,10 +44,20 @@ export const borders = {
   primary: "#1c1d24",
   /** Stronger / secondary border. `--bx-border-strong` */
   strong: "#23252e",
+  /** Mid hairline, between `strong` and `bright`. `--bx-border-mid` */
+  mid: "#2a2c34",
   /** Accent (green-tinted) border. `--bx-border-accent` */
   accent: "#2a3320",
   /** Bright overlay border. `--bx-border-bright` */
   bright: "#33353f",
+  /** Cyan-tinted border. `--bx-border-cyan` */
+  cyan: "#1d3540",
+  /** Magenta-tinted border. `--bx-border-magenta` */
+  magenta: "#3a2540",
+  /** Yellow-tinted border. `--bx-border-yellow` */
+  yellow: "#3a3520",
+  /** Red-tinted border. `--bx-border-red` */
+  red: "#3a2020",
 } as const;
 
 /**
@@ -61,3 +83,10 @@ export const fg = {
   /** Ghost text (placeholders, disabled). `--bx-text-7` (text[6]) */
   ghost: text[6],
 } as const;
+
+/**
+ * Off-ramp interstitial text grays used raw in the OCTANT source that fall
+ * between the numbered `--bx-text-*` steps. Brightest -> dimmest, mapping to
+ * `--bx-text-dim-1` .. `--bx-text-dim-4`.
+ */
+export const textDim = ["#aab0bd", "#6b7180", "#4b505c", "#363943"] as const;

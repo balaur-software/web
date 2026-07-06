@@ -1,4 +1,6 @@
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
+import { useControllableState } from "../hooks/useControllableState";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 const CELLS = 7;
 
@@ -14,18 +16,16 @@ export interface SwitchProps {
 
 /**
  * A toggle whose track is a row of octant cells that slides a lit "knob" cell
- * across an eighth-block rail. `aria-checked` + the ON/OFF state live in React;
- * the animated glyph track is written imperatively (refs + rAF) so it's inert
- * on the server and eases into place after hydration.
+ * across an eighth-block rail. On/off state is via `useControllableState`; the
+ * animated glyph track is written imperatively (ref + rAF) so it's inert on the
+ * server and eases into place after hydration.
  */
 export function Switch({ checked, defaultChecked = false, onChange, label, disabled, style }: SwitchProps) {
-  const isControlled = checked !== undefined;
-  const [internal, setInternal] = useState(defaultChecked);
-  const on = isControlled ? checked : internal;
-
+  const [on, setOn] = useControllableState(checked, defaultChecked, onChange);
   const trackRef = useRef<HTMLSpanElement>(null);
   const posRef = useRef(on ? CELLS - 1 : 0);
   const rafRef = useRef(0);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const track = trackRef.current;
@@ -44,13 +44,11 @@ export function Switch({ checked, defaultChecked = false, onChange, label, disab
       track.innerHTML = html;
     };
 
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     if (reduced) {
       posRef.current = target;
       render();
       return;
     }
-
     const anim = () => {
       posRef.current += (target - posRef.current) * 0.32;
       if (Math.abs(target - posRef.current) < 0.02) {
@@ -65,14 +63,11 @@ export function Switch({ checked, defaultChecked = false, onChange, label, disab
     render();
     rafRef.current = requestAnimationFrame(anim);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [on]);
+  }, [on, reduced]);
 
-  const toggle = useCallback(() => {
-    if (disabled) return;
-    const next = !on;
-    if (!isControlled) setInternal(next);
-    onChange?.(next);
-  }, [on, isControlled, onChange, disabled]);
+  const toggle = () => {
+    if (!disabled) setOn(!on);
+  };
 
   return (
     <div

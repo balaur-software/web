@@ -12,7 +12,7 @@
  */
 
 import { ACCENTS, DEFAULT_ACCENT_NAME } from "./accent.ts";
-import { borders, surfaces, text } from "./colors.ts";
+import { borders, surfaces, text, textDim, tints } from "./colors.ts";
 import { PALETTE } from "./palette.ts";
 import { blink, easing, space } from "./space.ts";
 import { fontSize, fonts } from "./type.ts";
@@ -26,7 +26,7 @@ export {
   DEFAULT_ACCENT_NAME,
 } from "./accent.ts";
 
-export { borders, fg, surfaces, text } from "./colors.ts";
+export { borders, fg, surfaces, text, textDim, tints } from "./colors.ts";
 export type { PaletteColor } from "./palette.ts";
 export { byIdx, byName, PALETTE } from "./palette.ts";
 export { blink, border, duration, easing, radius, space } from "./space.ts";
@@ -43,8 +43,12 @@ export const tokens = {
   surfaces,
   /** Border / hairline colors. */
   border: borders,
+  /** Status-tint background washes. */
+  tints,
   /** Text ramp, brightest -> dimmest. */
   text,
+  /** Off-ramp interstitial text grays (brightest -> dimmest). */
+  textDim,
   /** Accent system: default hue + selectable options. */
   accent: {
     default: ACCENTS[DEFAULT_ACCENT_NAME],
