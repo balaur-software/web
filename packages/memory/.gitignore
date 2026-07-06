@@ -1,0 +1,9 @@
+# Data files are never committed
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Toolchain
+node_modules/
+dist/

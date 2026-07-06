@@ -1,0 +1,18 @@
+# Data files are never committed
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Toolchain
+node_modules/
+dist/
+storybook-static/
+*.tsbuildinfo
+
+# Bundler output
+apps/web/public/client.js
+apps/web/public/client.js.map
+
+# Browser-driver scratch
+.playwright-mcp/

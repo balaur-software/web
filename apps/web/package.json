@@ -1,0 +1,20 @@
+{
+  "name": "@balaur/web",
+  "version": "0.1.0",
+  "description": "Bun-native SSR React app for the OCTANT design system.",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch run src/server.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@balaur/tokens": "workspace:*",
+    "@balaur/ui": "workspace:*",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  }
+}

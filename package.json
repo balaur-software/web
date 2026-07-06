@@ -1,0 +1,28 @@
+{
+  "name": "balaur-life",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun run --filter '*' typecheck",
+    "lint": "biome check .",
+    "fmt": "biome format --write .",
+    "check": "bun run typecheck && bun run lint && bun test",
+    "dev": "bun run --filter '@balaur/web' dev",
+    "storybook": "bun run --filter '@balaur/ui' storybook",
+    "build": "bun run --filter '*' build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2",
+    "@types/bun": "^1",
+    "typescript": "^5"
+  }
+}
