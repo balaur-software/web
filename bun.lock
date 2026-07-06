@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "balaur-life",
+      "dependencies": {
+        "balaur-memory": "github:balaur-software/memory#v0.4.3",
+      },
       "devDependencies": {
         "@biomejs/biome": "^2",
         "@types/bun": "^1",
@@ -23,10 +26,6 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
       },
-    },
-    "packages/memory": {
-      "name": "balaur-memory",
-      "version": "0.4.3",
     },
     "packages/octant-core": {
       "name": "@balaur/octant-core",
@@ -305,7 +304,7 @@
 
     "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
 
-    "balaur-memory": ["balaur-memory@workspace:packages/memory"],
+    "balaur-memory": ["balaur-memory@github:balaur-software/memory#64c0542", { "bin": { "balaur": "./cli/index.ts" } }, "balaur-software-memory-64c0542", "sha512-8z7zSnqZprXWjKkj6A6a9XEQB26wHLyBPAUwEAxiSkXmmg0MlnMlQrmP2rPGVdEzhkjlG6zOKFRHU+43s9TTRQ=="],
 
     "baseline-browser-mapping": ["baseline-browser-mapping@2.10.42", "", { "bin": { "baseline-browser-mapping": "dist/cli.cjs" } }, "sha512-c/jurFrDLyui7o1J86yLkRu4LMsTYcBohveus7/I2Hzdn9KIP2bdJPTue/lR1KH46enoPbD77GKeSYNdyPoD3Q=="],
 

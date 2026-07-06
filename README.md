@@ -6,7 +6,7 @@ Bun-workspace monorepo for the Balaur personal life OS.
 
 | Package | What |
 |---|---|
-| `packages/memory` (`balaur-memory`) | Consent-gated, lineage-tracked, forgettable memory layer. One SQLite file, zero runtime deps, Bun-native. |
+| [`balaur-memory`](https://github.com/balaur-software/memory) | Consent-gated, lineage-tracked, forgettable memory layer. One SQLite file, zero runtime deps, Bun-native. External dep — pinned to a Git tag, linked to a local checkout for parallel dev (see that repo's `docs/RELEASE.md`). |
 | `packages/octant-core` (`@balaur/octant-core`) | Pure, framework-agnostic encoder for the OCTANT design system — the pixel→mask→Unicode-octant-glyph core (`octChar`) + canvas rasterization fallback. |
 | `packages/tokens` (`@balaur/tokens`) | OCTANT design tokens (ANSI 16-color palette, ramps, type scale, motion, accent system) as typed TS + `tokens.css`; self-hosted DepartureMono. |
 | `packages/ui` (`@balaur/ui`) | The OCTANT design system as atomic React components + Storybook. |

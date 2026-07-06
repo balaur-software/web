@@ -16,8 +16,7 @@
       "!**/node_modules",
       "!**/dist",
       "!**/storybook-static",
-      "!**/*.d.ts",
-      "!packages/memory"
+      "!**/*.d.ts"
     ]
   }
 }
