@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { Store } from "balaur-memory";
-import { bar8 } from "@balaur/octant-core";
-import { PALETTE } from "@balaur/tokens";
-import { FillButton } from "@balaur/ui";
+import { bar8 } from "@balaur/octant/core";
+import { PALETTE } from "@balaur/octant/tokens";
+import { FillButton } from "@balaur/octant";
 
 test("linked external deps resolve through bun link", () => {
   expect(typeof Store).toBe("function");

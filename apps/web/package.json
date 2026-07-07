@@ -1,15 +1,18 @@
 {
   "name": "@balaur/web",
   "version": "0.1.0",
-  "description": "Bun-native SSR React app for the OCTANT design system.",
+  "description": "Bun-native SSR React web GUI for the pi coding agent, accessed securely via SSH tunnel.",
   "type": "module",
   "scripts": {
-    "dev": "bun --watch run src/server.tsx",
+    "dev": "PORT=6001 bun --watch run src/server.tsx",
+    "start": "NODE_ENV=production bun run src/server.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@balaur/tokens": "link:@balaur/tokens",
-    "@balaur/ui": "link:@balaur/ui",
+    "@mariozechner/pi-coding-agent": "^0.55.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.0",
+    "marked-highlight": "^2.2.1",
     "react": "^19",
     "react-dom": "^19"
   },

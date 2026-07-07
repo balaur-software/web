@@ -1,0 +1,25 @@
+[Unit]
+Description=pi-remote-web-ui – Bun-native SSR web GUI for the pi coding agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/dev/balaur/web/apps/web
+
+# Self-contained: no pi installation required. Provide the Mistral key here.
+# Environment=MISTRAL_API_KEY=... (or point EnvironmentFile at a secrets file)
+EnvironmentFile=-/root/dev/balaur/web/apps/web/.env
+
+# Run the SSR server directly with Bun — no build step.
+ExecStart=/usr/local/bin/bun run start
+Restart=on-failure
+RestartSec=5
+
+# Keep stdout/stderr in the journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pi-remote-web-ui
+
+[Install]
+WantedBy=multi-user.target

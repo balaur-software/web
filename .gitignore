@@ -16,3 +16,7 @@ apps/web/public/client.js.map
 
 # Browser-driver scratch
 .playwright-mcp/
+
+# Secrets & app-local agent state (auth.json, models.json, sessions)
+.env
+.balaur-agent/
