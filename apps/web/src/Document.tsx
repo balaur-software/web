@@ -5,8 +5,10 @@ const FAVICON =
 
 /**
  * The full HTML document rendered on the server. The interactive chat UI lives
- * under `#root`, which the client bundle hydrates. Styles are served as static
- * routes by the Bun server (see `server.tsx`).
+ * under `#root`, which the client bundle hydrates. The OCTANT token stylesheet
+ * (`/tokens.css`) supplies every `--bx-*` custom property + the DepartureMono
+ * font; `/style.css` is a thin app shell. Both are static routes served by the
+ * Bun server (see `server.tsx`).
  */
 export function Document() {
   return (
@@ -14,9 +16,9 @@ export function Document() {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>pi-remote-web-ui</title>
+        <title>balaur · agent</title>
         <link rel="icon" href={FAVICON} />
-        <link rel="stylesheet" href="/hljs.css" />
+        <link rel="stylesheet" href="/tokens.css" />
         <link rel="stylesheet" href="/style.css" />
       </head>
       <body>

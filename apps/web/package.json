@@ -10,9 +10,6 @@
   },
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.55.0",
-    "highlight.js": "^11.11.1",
-    "marked": "^15.0.0",
-    "marked-highlight": "^2.2.1",
     "react": "^19",
     "react-dom": "^19"
   },

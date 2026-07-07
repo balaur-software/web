@@ -36,11 +36,13 @@ if (!clientBuild.success) {
 }
 const clientJs = await clientBuild.outputs[0]!.text();
 
-// Static stylesheets: our own theme + the highlight.js github-dark theme.
+// Static assets: the OCTANT token stylesheet (custom properties + the
+// self-hosted DepartureMono @font-face) plus our own thin app shell. The font
+// file is served at the path tokens.css references relative to itself
+// (`../fonts/departure-mono.woff2` → `/fonts/departure-mono.woff2`).
 const stylePath = `${dir}/style.css`;
-const hljsCssPath = Bun.resolveSync("highlight.js/styles/github-dark.css", dir);
-// OCTANT design tokens (served for the /octant design-system spike route).
 const tokensCssPath = Bun.resolveSync("@balaur/octant/tokens/tokens.css", dir);
+const monoFontPath = Bun.resolveSync("@balaur/octant/tokens/fonts/departure-mono.woff2", dir);
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = process.env.HOST ?? "127.0.0.1"; // Never expose to the internet — use an SSH tunnel.
@@ -213,12 +215,14 @@ const server = Bun.serve({
     if (pathname === "/style.css") {
       return new Response(Bun.file(stylePath), { headers: { "content-type": "text/css; charset=utf-8" } });
     }
-    if (pathname === "/hljs.css") {
-      return new Response(Bun.file(hljsCssPath), { headers: { "content-type": "text/css; charset=utf-8" } });
-    }
-    if (pathname === "/octant/tokens.css") {
+    if (pathname === "/tokens.css") {
       return new Response(Bun.file(tokensCssPath), {
         headers: { "content-type": "text/css; charset=utf-8" },
+      });
+    }
+    if (pathname === "/fonts/departure-mono.woff2") {
+      return new Response(Bun.file(monoFontPath), {
+        headers: { "content-type": "font/woff2", "cache-control": "public, max-age=31536000, immutable" },
       });
     }
     if (pathname === "/octant") {
@@ -229,7 +233,7 @@ const server = Bun.serve({
             <meta charSet="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>OCTANT · design system spike</title>
-            <link rel="stylesheet" href="/octant/tokens.css" />
+            <link rel="stylesheet" href="/tokens.css" />
             <style>{`body{margin:0;background:#08080a;}`}</style>
           </head>
           <body>

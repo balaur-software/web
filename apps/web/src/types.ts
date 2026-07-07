@@ -1,37 +1,7 @@
-// Conversation model shared by the React UI and the WebSocket event handler.
-// Ported verbatim (in shape) from the original vanilla-TS `src/main.ts`.
-
-export interface ThinkingBlock {
-  type: "thinking";
-  text: string;
-  expanded: boolean;
-}
-export interface TextBlock {
-  type: "text";
-  text: string;
-}
-export interface ToolBlock {
-  type: "tool";
-  callId: string;
-  name: string;
-  args: unknown;
-  output: string;
-  isError: boolean;
-  running: boolean;
-  expanded: boolean;
-}
-export type Block = ThinkingBlock | TextBlock | ToolBlock;
-
-export interface UserItem {
-  kind: "user";
-  text: string;
-}
-export interface AssistantItem {
-  kind: "assistant";
-  blocks: Block[];
-  streaming: boolean;
-}
-export type ConversationItem = UserItem | AssistantItem;
+// Extension-UI bridge types shared by the React UI and the WebSocket handler.
+// The conversation model now lives in OCTANT's `ChatMessageData` (see
+// `octant/conversation.ts`); these are only the dialog/notify request shapes
+// forwarded from the agent's extension UI context (`server.tsx`).
 
 export type ExtUIMethod =
   | "select"
@@ -51,6 +21,7 @@ export interface ExtUIRequest {
   message?: string;
   options?: string[];
   prefill?: string;
+  placeholder?: string;
   timeout?: number;
   notifyType?: "info" | "warning" | "error";
   statusKey?: string;
@@ -58,9 +29,3 @@ export interface ExtUIRequest {
 }
 
 export type ToastKind = "info" | "warning" | "error";
-
-export interface Toast {
-  id: number;
-  message: string;
-  kind: ToastKind;
-}
