@@ -14,6 +14,7 @@ import {
 } from "@balaur/octant";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { AGENT_ID, Conversation } from "./octant/conversation.ts";
+import { renderBlock } from "./octant/render-block.tsx";
 import type { ExtUIRequest, ToastKind } from "./types.ts";
 
 const API_KEY_STORAGE = "balaur.mistralApiKey";
@@ -220,6 +221,7 @@ function ChatApp() {
         agents={agents}
         streaming={streaming}
         presence={presence}
+        renderBlock={renderBlock}
         onSend={sendPrompt}
         onStop={() => send({ type: "abort" })}
         style={{ flex: 1, minHeight: 0, height: "auto", border: "none", background: "transparent" }}

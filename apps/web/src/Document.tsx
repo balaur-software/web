@@ -19,6 +19,7 @@ export function Document() {
         <title>balaur · agent</title>
         <link rel="icon" href={FAVICON} />
         <link rel="stylesheet" href="/tokens.css" />
+        <link rel="stylesheet" href="/hljs.css" />
         <link rel="stylesheet" href="/style.css" />
       </head>
       <body>

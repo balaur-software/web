@@ -43,6 +43,10 @@ const clientJs = await clientBuild.outputs[0]!.text();
 const stylePath = `${dir}/style.css`;
 const tokensCssPath = Bun.resolveSync("@balaur/octant/tokens/tokens.css", dir);
 const monoFontPath = Bun.resolveSync("@balaur/octant/tokens/fonts/departure-mono.woff2", dir);
+// highlight.js theme for the syntax-highlighted spans web feeds into OCTANT's
+// CodeBlock via ChatPanel's `renderBlock` (highlighting is web's concern, not
+// the design system's).
+const hljsCssPath = Bun.resolveSync("highlight.js/styles/github-dark.css", dir);
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = process.env.HOST ?? "127.0.0.1"; // Never expose to the internet — use an SSH tunnel.
@@ -224,6 +228,9 @@ const server = Bun.serve({
       return new Response(Bun.file(monoFontPath), {
         headers: { "content-type": "font/woff2", "cache-control": "public, max-age=31536000, immutable" },
       });
+    }
+    if (pathname === "/hljs.css") {
+      return new Response(Bun.file(hljsCssPath), { headers: { "content-type": "text/css; charset=utf-8" } });
     }
     if (pathname === "/octant") {
       const { OctantDemo } = await import("./octant/OctantDemo.tsx");

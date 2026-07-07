@@ -25,6 +25,6 @@
   },
   "dependencies": {
     "balaur-memory": "github:balaur-software/memory#v0.4.3",
-    "@balaur/octant": "github:balaur-software/design#v0.2.0"
+    "@balaur/octant": "github:balaur-software/design#v0.3.0"
   }
 }

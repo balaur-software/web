@@ -25,3 +25,13 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
+
+/*
+ * highlight.js token colours (from /hljs.css) are kept, but the theme's own
+ * block background/padding are dropped so the highlighted <span> sits flush
+ * inside OCTANT's CodeBlock surface.
+ */
+.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}

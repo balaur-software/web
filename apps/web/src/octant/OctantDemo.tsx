@@ -1,6 +1,7 @@
 import { AccentProvider, ChatPanel, ToastProvider } from "@balaur/octant";
 import type { ReactNode } from "react";
 import { demoAgents, demoArtifacts, demoMessages } from "./demo-fixture.ts";
+import { renderBlock } from "./render-block.tsx";
 
 /**
  * OCTANT design-system integration spike for `web/`. Renders the agentic
@@ -31,6 +32,7 @@ export function OctantDemo(): ReactNode {
               agents={demoAgents}
               artifacts={demoArtifacts}
               streaming={false}
+              renderBlock={renderBlock}
               onSend={() => {}}
             />
           </div>
