@@ -5,6 +5,9 @@ type ToolCall = Extract<Block, { type: "tool_call" }>;
 type TextBlock = Extract<Block, { type: "text" }>;
 type Reasoning = Extract<Block, { type: "reasoning" }>;
 
+/** Single-agent id — the app resolves it to the active model via the agents map. */
+export const AGENT_ID = "agent";
+
 function clock(): string {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -20,6 +23,8 @@ function clock(): string {
 export class Conversation {
   messages: ChatMessageData[] = [];
   streaming = false;
+  /** Active model id, surfaced by `state_sync`; drives the agent's display name. */
+  model = "";
   private current: ChatMessageData | null = null;
   private seq = 0;
 
@@ -61,6 +66,7 @@ export class Conversation {
     const msg: ChatMessageData = {
       id: this.nextId("a"),
       role: "agent",
+      agentId: AGENT_ID,
       time: clock(),
       status: "streaming",
       blocks: [],
@@ -111,6 +117,7 @@ export class Conversation {
     const msg: ChatMessageData = {
       id: this.nextId("a"),
       role: "agent",
+      agentId: AGENT_ID,
       time: clock(),
       status: "streaming",
       blocks: [],
@@ -146,6 +153,7 @@ export class Conversation {
     this.current = null;
     this.seq = 0;
     this.streaming = (data.streaming as boolean) ?? false;
+    if (typeof data.model === "string") this.model = data.model;
 
     const messages = data.messages as Array<Record<string, unknown>> | undefined;
     if (!messages) return;
@@ -175,7 +183,13 @@ export class Conversation {
             });
           }
         }
-        this.messages.push({ id: this.nextId("a"), role: "agent", status: "complete", blocks });
+        this.messages.push({
+          id: this.nextId("a"),
+          role: "agent",
+          agentId: AGENT_ID,
+          status: "complete",
+          blocks,
+        });
       } else if (msg.role === "toolResult") {
         const callId = msg.toolCallId as string;
         const first = (msg.content as Array<Record<string, unknown>> | undefined)?.[0];

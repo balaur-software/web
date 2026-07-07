@@ -13,7 +13,7 @@ import {
   useToast,
 } from "@balaur/octant";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Conversation } from "./octant/conversation.ts";
+import { AGENT_ID, Conversation } from "./octant/conversation.ts";
 import type { ExtUIRequest, ToastKind } from "./types.ts";
 
 const API_KEY_STORAGE = "balaur.mistralApiKey";
@@ -203,6 +203,9 @@ function ChatApp() {
       ? [{ label: "THINKING", state: "thinking" }]
       : [{ label: "ONLINE", state: "online" }];
 
+  const agentName = (conv.model.split(/[-@]/)[0] || "agent").toUpperCase();
+  const agents = { [AGENT_ID]: { id: AGENT_ID, name: agentName, accent: "#46c66d" } };
+
   return (
     <>
       <Header
@@ -214,6 +217,7 @@ function ChatApp() {
 
       <ChatPanel
         messages={conv.messages}
+        agents={agents}
         streaming={streaming}
         presence={presence}
         onSend={sendPrompt}
