@@ -93,3 +93,85 @@ test("memory_touch records use on an active node", async () => {
   expect(store.getNode(out.node.id as NodeId).useCount).toBe(1);
   store.close();
 });
+
+test("memory_recall and memory_search find an approved node — and only active ones", async () => {
+  const store = testStore();
+  const tools = memoryTools(store, { origin: "test" });
+  const out = store.propose({ type: "task", title: "buy stamps", body: "", origin: "seed" });
+
+  // still proposed → not recallable
+  expect(JSON.parse(await call(tools, "memory_recall", { terms: ["stamps"] }))).toHaveLength(0);
+
+  store.decide(out.node.id, { kind: "approve" });
+  const recalled = JSON.parse(await call(tools, "memory_recall", { terms: ["stamps"] }));
+  expect(recalled).toHaveLength(1);
+  expect(recalled[0].title).toBe("buy stamps");
+  expect(recalled[0].status).toBe("active");
+
+  const searched = JSON.parse(await call(tools, "memory_search", { terms: ["stamps"] }));
+  expect(searched.map((n: { id: string }) => n.id)).toContain(out.node.id);
+  store.close();
+});
+
+test("memory_agenda windows on the scheduled moment; memory_episode on creation time", async () => {
+  const store = testStore();
+  const tools = memoryTools(store, { origin: "test" });
+  const out = store.propose({
+    type: "task",
+    title: "dentist",
+    body: "",
+    when: "2026-07-10T09:00:00Z",
+    origin: "seed",
+  });
+  store.decide(out.node.id, { kind: "approve" });
+
+  const agenda = JSON.parse(
+    await call(tools, "memory_agenda", { from: "2026-07-09T00:00:00Z", to: "2026-07-11T00:00:00Z" }),
+  );
+  expect(agenda.map((n: { id: string }) => n.id)).toContain(out.node.id);
+
+  const agendaMiss = JSON.parse(
+    await call(tools, "memory_agenda", { from: "2026-07-11T00:00:00Z", to: "2026-07-12T00:00:00Z" }),
+  );
+  expect(agendaMiss).toHaveLength(0);
+
+  const now = Date.now();
+  const episode = JSON.parse(
+    await call(tools, "memory_episode", {
+      from: new Date(now - 3_600_000).toISOString(),
+      to: new Date(now + 3_600_000).toISOString(),
+    }),
+  );
+  expect(episode.map((n: { id: string }) => n.id)).toContain(out.node.id);
+  store.close();
+});
+
+test("memory_who returns candidates; memory_context returns the bounded card", async () => {
+  const store = testStore();
+  const tools = memoryTools(store, { origin: "test" });
+  const out = store.propose({ type: "memory", title: "Ana Ionescu", body: "sister", origin: "seed" });
+  store.decide(out.node.id, { kind: "approve" });
+
+  const who = JSON.parse(await call(tools, "memory_who", { type: "memory", text: "Ana Ionescu" }));
+  expect(who.candidates.map((n: { id: string }) => n.id)).toContain(out.node.id);
+
+  const ctx = JSON.parse(await call(tools, "memory_context", { id: out.node.id }));
+  expect(ctx.node.id).toBe(out.node.id);
+  expect(Array.isArray(ctx.aliases)).toBe(true);
+  expect(Array.isArray(ctx.peers)).toBe(true);
+  store.close();
+});
+
+test("memory_pending summarizes the queue without deciding anything", async () => {
+  const store = testStore();
+  const tools = memoryTools(store, { origin: "test" });
+  store.propose({ type: "task", title: "buy stamps", body: "", origin: "seed" });
+
+  const pending = JSON.parse(await call(tools, "memory_pending", {}));
+  expect(pending).toHaveLength(1);
+  expect(pending[0].kind).toBe("proposal");
+  expect(pending[0].title).toBe("buy stamps");
+  // still queued afterwards — reading is not deciding
+  expect(store.pendingQueue()).toHaveLength(1);
+  store.close();
+});
