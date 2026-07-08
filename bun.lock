@@ -19,6 +19,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@mariozechner/pi-coding-agent": "^0.55.0",
+        "@sinclair/typebox": "^0.34",
         "highlight.js": "^11.11.1",
         "react": "^19",
         "react-dom": "^19",
