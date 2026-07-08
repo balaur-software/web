@@ -5,7 +5,7 @@
     "": {
       "name": "balaur-life",
       "dependencies": {
-        "@balaur/octant": "github:balaur-software/design#v0.3.0",
+        "@balaur/octant": "github:balaur-software/design#v0.4.1",
         "balaur-memory": "github:balaur-software/memory#v0.4.3",
       },
       "devDependencies": {
@@ -73,7 +73,7 @@
 
     "@babel/runtime": ["@babel/runtime@7.29.7", "", {}, "sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw=="],
 
-    "@balaur/octant": ["@balaur/octant@github:balaur-software/design#9f26088", { "peerDependencies": { "react": "^19", "react-dom": "^19" } }, "balaur-software-design-9f26088", "sha512-r0GUvQR3iW+TNdrRoN6lbXmdxNRgrkVwdGQCf8YpjOkXn+vvPBzoaaUAHMm2eF5vPf2dwszGqk6XXVvcI1pdFw=="],
+    "@balaur/octant": ["@balaur/octant@github:balaur-software/design#c1fe89b", { "peerDependencies": { "react": "^19", "react-dom": "^19" } }, "balaur-software-design-c1fe89b", "sha512-KZkCZIxh50VphtHL6kkRKUd1BczEZllKlYX8wq19ZZwMFanMu1ju53kJIvVIOLpsfynOFpRRj8rHiylXd50d5w=="],
 
     "@balaur/web": ["@balaur/web@workspace:apps/web"],
 
