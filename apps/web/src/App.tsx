@@ -2,8 +2,11 @@ import {
   AccentProvider,
   ChatPanel,
   FillButton,
+  type MemoryNode,
   Modal,
   type ToastKind as OctantToastKind,
+  PendingQueue,
+  type PendingVerdict,
   type PresenceItem,
   ScanButton,
   Select,
@@ -53,6 +56,8 @@ function ChatApp() {
   const connectedRef = useRef(false);
   const dialogRef = useRef<ExtUIRequest | null>(null);
   const [keyDialog, setKeyDialog] = useState(false);
+  const [pending, setPending] = useState<readonly MemoryNode[]>([]);
+  const [queueOpen, setQueueOpen] = useState(false);
   const [, force] = useReducer((n: number) => n + 1, 0);
   const toast = useToast();
 
@@ -108,6 +113,12 @@ function ChatApp() {
       }
       case "extension_error":
         showToast(`Extension error: ${event.error as string}`, "error");
+        break;
+      case "memory_pending":
+        setPending((event.items as MemoryNode[]) ?? []);
+        break;
+      case "memory_error":
+        showToast(`Memory: ${event.message as string}`, "error");
         break;
     }
     force();
@@ -171,6 +182,15 @@ function ChatApp() {
     send({ type: "prompt", message: text });
   }
 
+  function handleVerdict(id: string, verdict: PendingVerdict) {
+    if (verdict === "approve" || verdict === "reject") {
+      send({ type: "memory_decide", id, kind: verdict });
+    } else {
+      // v1: supersede needs a target picker, archive has no Decision kind yet.
+      showToast("supersede/archive aren't wired yet — approve or reject for now", "info");
+    }
+  }
+
   function respondDialog(value: Record<string, unknown>) {
     const req = dialogRef.current;
     if (!req) return; // idempotent: Modal fires onConfirm then onClose
@@ -212,20 +232,37 @@ function ChatApp() {
       <Header
         connected={connected}
         streaming={streaming}
+        pendingCount={pending.length}
+        onQueue={() => setQueueOpen((v) => !v)}
         onKey={() => setKeyDialog(true)}
         onNew={() => send({ type: "new_session" })}
       />
 
-      <ChatPanel
-        messages={conv.messages}
-        agents={agents}
-        streaming={streaming}
-        presence={presence}
-        renderBlock={renderBlock}
-        onSend={sendPrompt}
-        onStop={() => send({ type: "abort" })}
-        style={{ flex: 1, minHeight: 0, height: "auto", border: "none", background: "transparent" }}
-      />
+      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+        <ChatPanel
+          messages={conv.messages}
+          agents={agents}
+          streaming={streaming}
+          presence={presence}
+          renderBlock={renderBlock}
+          onSend={sendPrompt}
+          onStop={() => send({ type: "abort" })}
+          style={{ flex: 1, minHeight: 0, height: "auto", border: "none", background: "transparent" }}
+        />
+        {queueOpen ? (
+          <aside
+            style={{
+              width: 380,
+              flex: "none",
+              overflowY: "auto",
+              borderLeft: "1px solid var(--bx-border, #1c1d24)",
+              background: "var(--bx-surface-1, #0a0b0e)",
+            }}
+          >
+            <PendingQueue items={pending} onVerdict={handleVerdict} />
+          </aside>
+        ) : null}
+      </div>
 
       {dialog ? <ExtDialog req={dialog} onRespond={respondDialog} /> : null}
 
@@ -240,11 +277,15 @@ function ChatApp() {
 function Header({
   connected,
   streaming,
+  pendingCount,
+  onQueue,
   onKey,
   onNew,
 }: {
   connected: boolean;
   streaming: boolean;
+  pendingCount: number;
+  onQueue: () => void;
   onKey: () => void;
   onNew: () => void;
 }) {
@@ -286,6 +327,9 @@ function Header({
         />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <ScanButton onClick={onQueue} style={compact}>
+          ◇ QUEUE ({pendingCount})
+        </ScanButton>
         <ScanButton onClick={onKey} style={compact}>
           ◆ KEY
         </ScanButton>
