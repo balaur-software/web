@@ -17,7 +17,7 @@ description: Use when working in the balaur web repo (balaur-software/web, root 
 
 | You want to… | Use instead |
 |---|---|
-| Run/deploy the app, systemd unit, ports on this box, Herdr panes, NetBird exposure | **balaur-run-and-operate** |
+| Run/deploy the app, systemd unit, ports on this box, Herdr panes, exposure | **balaur-run-and-operate** |
 | Cross-repo architecture, tag-pin doctrine, change choreography | **balaur-workspace-map** |
 | OCTANT component APIs, tokens, Storybook, SSR discipline inside design/ | **design-octant-reference** |
 | Releasing/consuming a new OCTANT version, dual-React doctrine detail | **design-change-and-release** |
@@ -151,7 +151,7 @@ Everything the app reads from the environment, verified in server.tsx:
 | Var | server.tsx | Default | Effect / gotcha |
 |---|---|---|---|
 | `PORT` | :51 | `8080` | **Machine-specific:** 8080 is taken by SearXNG on this dev VPS — never use the default here. `bun run dev` sets `PORT=6001`; the local self-host instance uses 8090 (see **balaur-run-and-operate**). |
-| `HOST` | :52 | `127.0.0.1` | The UI has **no login**. Binding beyond localhost is an **exposure decision**, gated by firewall + NetBird mesh ACL, not a convenience tweak — see **balaur-run-and-operate**. `HOST` is missing from the README env table (drift). |
+| `HOST` | :52 | `127.0.0.1` | The UI has **no login**. Binding beyond localhost is an **exposure decision** — the sanctioned posture is loopback + SSH tunnel (no mesh exists on this box since 2026-07-08); see **balaur-run-and-operate**. `HOST` is missing from the README env table (drift). |
 | `NODE_ENV` | :31 | unset | `production` → minified client bundle. `bun run start` sets it. |
 | `MISTRAL_API_KEY` | :174 | unset | Server-side fallback key; runtime-only, never written to auth.json. |
 | `MISTRAL_MODEL` | :175 | `devstral-medium-latest` | Any valid Mistral model id. Unknown id **throws at boot** → systemd crash-loop. |
