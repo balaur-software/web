@@ -12,6 +12,7 @@
  * no Vite, no `ws`, no separate build step.
  */
 
+import { mkdirSync } from "node:fs";
 import {
   AuthStorage,
   createAgentSession,
@@ -19,8 +20,11 @@ import {
   SessionManager,
   SettingsManager,
 } from "@mariozechner/pi-coding-agent";
+import { Store } from "balaur-memory";
 import { renderToReadableStream } from "react-dom/server";
 import { Document } from "./Document.tsx";
+import { memoryTools } from "./memory/memory-tools.ts";
+import { decidePending, pendingProposals } from "./memory/owner-channel.ts";
 
 const dir = import.meta.dir;
 
@@ -188,6 +192,18 @@ if (!model) {
   throw new Error(`Unknown Mistral model "${MODEL_ID}" — set MISTRAL_MODEL to a valid model id.`);
 }
 
+// ── Memory host (I14: single writer) ────────────────────────────────────────
+// One Store instance owns all writes for this process. Agent verbs go through
+// memoryTools (consent-gated); owner verbs through the WS handlers below.
+// While this server runs, nothing else may WRITE the store dir (CLI reads are
+// fine under WAL).
+const storeDir = process.env.BALAUR_STORE_DIR ?? `${process.env.HOME}/.local/share/life`;
+mkdirSync(storeDir, { recursive: true }); // Store.open does not mkdir
+const store = Store.open({ dir: storeDir });
+
+// Rebound once the server (and its broadcast) exists; tools only run after that.
+let queueChanged: () => void = () => {};
+
 const { session } = await createAgentSession({
   model,
   agentDir,
@@ -195,6 +211,11 @@ const { session } = await createAgentSession({
   modelRegistry,
   settingsManager: SettingsManager.inMemory(),
   sessionManager: SessionManager.inMemory(process.cwd()),
+  // Memory-aware assistant, not a coding agent: no read/bash/edit/write.
+  // Bash could reach the owner's CLI (`bunx balaur decide`) and walk around
+  // the consent gate — the tool split IS the gate's wire integrity.
+  tools: [],
+  customTools: memoryTools(store, { origin: "web-chat", onQueueChange: () => queueChanged() }),
 });
 
 console.log(
@@ -273,8 +294,9 @@ const server = Bun.serve({
           sessionId: session.sessionId,
         }),
       );
+      ws.send(JSON.stringify({ type: "memory_pending", items: pendingProposals(store) }));
     },
-    async message(_ws, message) {
+    async message(ws, message) {
       let cmd: Record<string, unknown>;
       try {
         cmd = JSON.parse(message.toString());
@@ -328,6 +350,21 @@ const server = Bun.serve({
             }
             break;
           }
+          case "memory_pending": {
+            ws.send(JSON.stringify({ type: "memory_pending", items: pendingProposals(store) }));
+            break;
+          }
+          case "memory_decide": {
+            const id = typeof cmd.id === "string" ? cmd.id : "";
+            const kind = cmd.kind === "approve" || cmd.kind === "reject" ? cmd.kind : null;
+            if (!id || kind === null) break;
+            const result = decidePending(store, id, kind);
+            if (!result.ok) {
+              ws.send(JSON.stringify({ type: "memory_error", message: result.message }));
+            }
+            queueChanged(); // every tab gets the refreshed queue either way
+            break;
+          }
           default:
             break;
         }
@@ -345,6 +382,8 @@ const server = Bun.serve({
 const broadcast = (msg: unknown) => {
   server.publish(TOPIC, JSON.stringify(msg));
 };
+
+queueChanged = () => broadcast({ type: "memory_pending", items: pendingProposals(store) });
 
 // Broadcast every agent event to all connected clients.
 session.subscribe((event) => broadcast(event));
@@ -371,6 +410,7 @@ for (const sig of ["SIGINT", "SIGTERM"] as const) {
   process.on(sig, () => {
     console.log(`\n${sig} received, shutting down…`);
     session.dispose();
+    store.close();
     server.stop();
     process.exit(0);
   });
