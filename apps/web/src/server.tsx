@@ -25,6 +25,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { Document } from "./Document.tsx";
 import { memoryTools } from "./memory/memory-tools.ts";
 import { decidePending, pendingProposals } from "./memory/owner-channel.ts";
+import { registerMemorySchema } from "./memory/schema.ts";
 
 const dir = import.meta.dir;
 
@@ -200,6 +201,9 @@ if (!model) {
 const storeDir = process.env.BALAUR_STORE_DIR ?? `${process.env.HOME}/.local/share/life`;
 mkdirSync(storeDir, { recursive: true }); // Store.open does not mkdir
 const store = Store.open({ dir: storeDir });
+// A Store opens with a blank schema; register the agent's proposable vocabulary
+// or every memory_propose fails with "node type X is not registered". Idempotent.
+registerMemorySchema(store);
 
 // Rebound once the server (and its broadcast) exists; tools only run after that.
 let queueChanged: () => void = () => {};

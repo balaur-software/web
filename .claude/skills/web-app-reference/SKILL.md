@@ -1,6 +1,6 @@
 ---
 name: web-app-reference
-description: Use when working in the balaur web repo (balaur-software/web, root package "balaur-life", app @balaur/web) — editing server.tsx / App.tsx / Document.tsx, debugging the /ws WebSocket protocol or extension-UI dialogs, SSR/hydration or /client.js issues, PORT / HOST / MISTRAL_API_KEY / MISTRAL_MODEL / BALAUR_AGENT_DIR questions, an "Unknown Mistral model" boot crash, bumping the @balaur/octant or balaur-memory tag pins, bun.lock pin checks, links.test.ts, or pi-coding-agent bumps.
+description: Use when working in the balaur web repo (balaur-software/web, root package "balaur-life", app @balaur/web) — editing server.tsx / App.tsx / Document.tsx, the memory integration (memory/ dir, agent memory tools, owner queue panel, node-type schema), debugging the /ws WebSocket protocol or extension-UI dialogs, SSR/hydration or /client.js issues, PORT / HOST / MISTRAL_API_KEY / MISTRAL_MODEL / BALAUR_AGENT_DIR / BALAUR_STORE_DIR questions, a "node type X is not registered" memory refusal or "Unknown Mistral model" boot crash, bumping the @balaur/octant or balaur-memory tag pins, bun.lock pin checks, links.test.ts, or pi-coding-agent bumps.
 ---
 
 # web-app-reference — the balaur web app
@@ -10,8 +10,8 @@ description: Use when working in the balaur web repo (balaur-software/web, root 
 - Repo: `github.com/balaur-software/web` (private, no git tags as of 2026-07-08).
 - Root package is still named **`balaur-life`** — monorepo-era residue from before the OCTANT and memory extractions. The repo README's title and package table describe that old world (see "Doc-drift ledger" below).
 - One Bun workspace app: `apps/web` = **`@balaur/web`** — a Bun-native SSR React 19 chat GUI for the **pi coding agent** (`@mariozechner/pi-coding-agent`), ported from `VVander/pi-remote-web-ui`. Intended to become the life-OS app.
-- `balaur-memory` is a pinned dependency but, as of 2026-07-08, is imported **only** by `test/links.test.ts`. The app does not use the memory layer yet — that integration is the campaign; see the workspace-root skill **balaur-memory-web-campaign**. Note: memory HEAD has moved **14 commits past the pinned v0.4.3** (unreleased deep-audit work) — what this repo installs is the tag, not memory main; never reason about the dep from the sibling checkout's HEAD.
-- No CI, no git hooks (in THIS repo — memory armed its own CI 2026-07-08). The gate is `bun run check` (typecheck + biome + bun test), green at HEAD `4c370cf` as of 2026-07-08.
+- `balaur-memory` is now **live in the app** (as of 2026-07-08): the server hosts a single `Store`, the chat agent gets consent-gated memory tools, and the owner approves/rejects proposals over WS. See the **Memory integration** section below. `test/links.test.ts` is no longer its only importer — `apps/web/src/memory/*` and `test/memory-schema.test.ts` use it too. For the broader wiring plan and cross-repo doctrine, see the workspace-root skill **balaur-memory-web-campaign**. Note: memory HEAD has moved past the pinned **v0.4.3** (unreleased deep-audit work) — what this repo installs is the tag, not memory main; never reason about the dep from the sibling checkout's HEAD.
+- No CI, no git hooks (in THIS repo — memory armed its own CI 2026-07-08). The gate is `bun run check` (typecheck + biome + bun test); re-verify green at HEAD (`git -C /home/alex/projects/balaur/web log --oneline -1`).
 
 ## When NOT to use this skill
 
@@ -21,7 +21,7 @@ description: Use when working in the balaur web repo (balaur-software/web, root 
 | Cross-repo architecture, tag-pin doctrine, change choreography | **balaur-workspace-map** |
 | OCTANT component APIs, tokens, Storybook, SSR discipline inside design/ | **design-octant-reference** |
 | Releasing/consuming a new OCTANT version, dual-React doctrine detail | **design-change-and-release** |
-| Wiring balaur-memory into the chat agent | **balaur-memory-web-campaign** |
+| The broader memory wiring campaign / cross-repo doctrine (the in-app basics are here — see Memory integration) | **balaur-memory-web-campaign** |
 | Triage an unknown symptom across repos | **balaur-debugging-playbook** |
 
 ## Layout (every source file)
@@ -30,18 +30,25 @@ description: Use when working in the balaur web repo (balaur-software/web, root 
 web/
   package.json            # root "balaur-life"; holds the two git-tag pins
   bun.lock                # resolved pins live here — verify after every bump
-  test/links.test.ts      # the ONE test (dependency-resolution smoke)
+  test/
+    links.test.ts         # dependency-resolution smoke
+    memory-schema.test.ts # node-type schema + memory_propose regression tests
   apps/web/
     package.json          # @balaur/web; pi-coding-agent, highlight.js, react 19
     pi-remote-web-ui.service  # STALE historical systemd template — never deploy from it
     .balaur-agent/        # gitignored agent state (auth.json, models.json)
     src/
-      server.tsx          # everything server-side: build, routes, WS, pi session
+      server.tsx          # everything server-side: build, routes, WS, pi session, Store host
       Document.tsx        # SSR HTML shell for "/"
-      App.tsx             # the whole client UI + WS client + dialogs
+      App.tsx             # the whole client UI + WS client + dialogs + owner queue panel
       client.tsx          # 5-line hydrateRoot entry
       types.ts            # extension-UI request shapes (ExtUIMethod union)
       style.css           # thin app shell
+      memory/
+        schema.ts         # PROPOSABLE_TYPES + registerMemorySchema — the store's vocabulary
+        memory-tools.ts   # the agent's consent-gated memory verbs (propose + reads)
+        owner-channel.ts  # owner-side projection + decidePending (approve/reject)
+        project.ts        # Node -> MemoryNode projection for the owner UI
       octant/
         conversation.ts   # pi events -> OCTANT ChatMessageData transcript
         blocks.ts         # fenced-code splitter (text -> text/code blocks)
@@ -84,6 +91,8 @@ One endpoint (`/ws`), JSON messages both ways. Malformed JSON and unknown `type`
 | `abort` | — | `await session.abort()` |
 | `new_session` | — | `await session.newSession()` then broadcasts a fresh `state_sync` to every tab (wipes the shared conversation for everyone) |
 | `extension_ui_response` | `id: string` + method-specific fields (`value`, `confirmed`, `cancelled`) | Resolves the pending extension-UI promise matched by `id` |
+| `memory_pending` | — | Owner queue read: replies with `{ type: "memory_pending", items }` (the pending proposals). Also pushed on WS open and after any agent write. |
+| `memory_decide` | `id: string`, `kind: "approve" \| "reject"` | **Owner verb** — the consent gate's other half. `decidePending(store, id, kind)`; on success re-broadcasts the queue, on failure replies `{ type: "memory_error", message }`. `supersede`/`archive` are not wired yet (v1). |
 
 ### Server → client (handled in `App.tsx` `handleServerEvent`, App.tsx:68-114)
 
@@ -96,6 +105,8 @@ One endpoint (`/ws`), JSON messages both ways. Malformed JSON and unknown `type`
 | `tool_execution_update` / `tool_execution_end` | `toolCallId`, partial/final result | Updates the matching `tool_call` block's `result`/`status` |
 | `extension_ui_request` | `id`, `method`, method-specific fields | `notify` → toast; `select` / `confirm` / `input` / `editor` → modal dialog; **everything else is dropped** (see bridge table) |
 | `extension_error` | `extensionPath`, `event`, `error` | Error toast |
+| `memory_pending` | `items` (pending proposals) | Owner queue panel (`PendingQueue`) re-renders. Pushed on WS open, after any agent write (`onQueueChange`), and after a decision. |
+| `memory_error` | `message` | Error toast — a rejected owner decision (e.g. the id is gone) |
 
 All pi agent events are fanned out verbatim: `session.subscribe((event) => broadcast(event))` publishes to Bun pub/sub topic `"conversation"` (server.tsx:53, 345-350). Any event types beyond the ones above reach the client and fall through the switch unhandled.
 
@@ -144,6 +155,26 @@ and diff the method list against `createExtensionUIContext` in `server.tsx`. Opt
 - **Self-contained agent state**: `agentDir` defaults to `apps/web/.balaur-agent` (gitignored). `SettingsManager.inMemory()` and `SessionManager.inMemory(process.cwd())` — nothing reads or writes a global `~/.pi` (server.tsx:196-197).
 - **Agent display identity = the model name**: `conv.model.split(/[-@]/)[0].toUpperCase()` (App.tsx:207) — `devstral-medium-latest` renders as **DEVSTRAL**. The single agent id is `"agent"` (`AGENT_ID`, conversation.ts:9).
 
+## Memory integration (`apps/web/src/memory/`)
+
+The server is the **memory host**: one `Store` (balaur-memory) owns all writes for the process (server.tsx, right after the pi session is built). The design is a **consent gate with wire integrity** — the agent can only *propose*, the owner *decides*:
+
+- **Agent surface** — `memoryTools(store, { origin: "web-chat", onQueueChange })` (memory-tools.ts) registers the agent's verbs as pi `customTools`: `memory_propose` / `memory_propose_edit` (consent-gated writes → queue), plus pure reads (`memory_recall`, `memory_search`, `memory_agenda`, `memory_episode`, `memory_who`, `memory_context`, `memory_touch`, `memory_pending`). Owner verbs (decide, forget, updateNode) are **deliberately never** registered as tools — "a consent gate with a wire-shaped hole in it is not a consent gate." The agent has **no bash/read/edit/write** either, so it can't reach the CLI and walk around the gate.
+- **Owner surface** — the WS `memory_decide` verb (approve/reject) and `owner-channel.ts` (`decidePending`, `pendingProposals`). The client renders the queue in the **owner queue panel** (`PendingQueue` in App.tsx).
+- A `MemoryError` thrown by a tool is caught and returned to the model as `refused: <message>` — a refusal is information, not a crash.
+
+### The schema gotcha (registerMemorySchema) — READ THIS
+
+**balaur-memory ships NO built-in node types.** A freshly opened `Store` is a blank schema (only the library's reserved `day` episodic anchor). `store.propose({ type })` refuses any unregistered type with **`node type "X" is not registered`**. So the host MUST register its vocabulary at boot or *every* `memory_propose` fails on the first call.
+
+`memory/schema.ts` is the single source of truth:
+
+- `PROPOSABLE_TYPES = ["task", "memory", "preference"]` — all born **`proposed`**. `store.propose()` *requires* a `proposed`-born type (`requireGatedType`); an `active`-born type is owner-authored and refused by the propose surface.
+- `registerMemorySchema(store)` — called in server.tsx right after `Store.open`. Idempotent (`registerType` upserts `ON CONFLICT DO UPDATE`), safe every boot.
+- The `memory_propose` parameter union is **derived** from `PROPOSABLE_TYPES` — the tool can never offer a type the store hasn't registered. Add a proposable type in ONE place (schema.ts) and both the schema and the tool follow. Don't hardcode the union back.
+
+If you see `node type X is not registered` from a memory tool: the type isn't in `PROPOSABLE_TYPES` (add it there) or `registerMemorySchema` isn't being called. Regression coverage: `test/memory-schema.test.ts`.
+
 ## Configuration surface (the complete env-var list)
 
 Everything the app reads from the environment, verified in server.tsx:
@@ -156,6 +187,7 @@ Everything the app reads from the environment, verified in server.tsx:
 | `MISTRAL_API_KEY` | :174 | unset | Server-side fallback key; runtime-only, never written to auth.json. |
 | `MISTRAL_MODEL` | :175 | `devstral-medium-latest` | Any valid Mistral model id. Unknown id **throws at boot** → systemd crash-loop. |
 | `BALAUR_AGENT_DIR` | :180 | `apps/web/.balaur-agent` | Agent state dir (auth.json, models.json). |
+| `BALAUR_STORE_DIR` | ~:200 | `$HOME/.local/share/life` | The memory Store dir (`memory.db` + `index.db`). `Store.open` does **not** mkdir — the server does. `bun run dev` points this at a **scratch** dir so dev never writes the live store (commit `9ccbaf8`). While the server runs, nothing else may WRITE this dir (CLI reads are fine under WAL). |
 
 Scripts: `bun run dev` = `PORT=6001 bun --watch run src/server.tsx`; `bun run start` = `NODE_ENV=production bun run src/server.tsx` (apps/web/package.json).
 
@@ -193,7 +225,7 @@ bun run check
 # 7. Smoke by hand: bun run dev  → http://localhost:6001 renders and chats
 ```
 
-Verified pin state as of 2026-07-08 (unchanged): `@balaur/octant#v0.3.0` → `9f26088`, `balaur-memory#v0.4.3` → `64c0542`; both match `git rev-parse` of the tags in the sibling checkouts.
+Verified pin state as of 2026-07-08: `@balaur/octant#v0.4.1` → `c1fe89b` (bumped from v0.3.0 in commit `b596ce1`), `balaur-memory#v0.4.3` → `64c0542`; both match `git rev-parse` of the tags in the sibling checkouts.
 
 **A real bump hazard to plan for**: memory HEAD (unreleased, 14 commits past v0.4.3) **dropped the `balaur` CLI** (`3ddb84b` — no `cli/`, no `bin` entry) and shipped a **breaking `DoctorReport` revision** (`005da77`: adds `pendingByKind`, `historyRows`, `reproposedAfterForget30d`). So the first memory pin bump past v0.4.3 will (a) make `bunx balaur` from this repo stop resolving — replace any CLI-based verification/ops steps with library calls first — and (b) break any code destructuring the old `DoctorReport` shape. Check the memory release notes before bumping.
 
@@ -209,7 +241,7 @@ Verified pin state as of 2026-07-08 (unchanged): `@balaur/octant#v0.3.0` → `9f
 
 ## Testing policy
 
-- Exactly **one** test today: `test/links.test.ts` — a dependency-resolution smoke (Store from balaur-memory, `bar8`/`PALETTE`/`FillButton` from octant subpath + root exports). Its name, `"linked external deps resolve through bun link"`, is **stale** — the deps are tag pins now, not links. It is also the **only** importer of `balaur-memory` in the repo.
+- Two test files today: `test/links.test.ts` — a dependency-resolution smoke (Store from balaur-memory, `bar8`/`PALETTE`/`FillButton` from octant subpath + root exports); its name `"linked external deps resolve through bun link"` is **stale** (the deps are tag pins now, not links). And `test/memory-schema.test.ts` — opens a scratch Store per test, drives `registerMemorySchema` + the real `memory_propose` tool, and pins the regression that a blank-schema store refuses proposals.
 - The SSR server, route table, WS protocol, `Conversation`, and `splitTextBlocks` have **zero test coverage**. The strict tsconfig (`strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` + `verbatimModuleSyntax`) is the real net.
 - New web features SHOULD add `bun:test` tests under `test/`. `splitTextBlocks` and `Conversation` are pure and cheap to test — start there.
 - Gate: `bun run check` at the repo root. Change control is PR-per-phase (see **balaur-workspace-map**).
@@ -232,9 +264,9 @@ Machine-specific facts above (ports 8080/6001/8090, `~/.bun/bin/bun`, checkout p
 
 | Fact (as of 2026-07-08) | Re-verify with |
 |---|---|
-| HEAD `4c370cf`, no tags | `git -C /home/alex/projects/balaur/web log --oneline -1 && git tag` |
+| HEAD moves per commit (memory integration + schema fix landed after `4c370cf`), no tags | `git -C /home/alex/projects/balaur/web log --oneline -1 && git tag` |
 | `bun run check` green | `cd /home/alex/projects/balaur/web && bun run check` |
-| Pins: octant `#9f26088` (v0.3.0), memory `#64c0542` (v0.4.3) — while memory HEAD sits at `f1b168a` (v0.4.3+14, unreleased) | `grep -E '@balaur/octant\|balaur-memory' bun.lock \| head -4; git -C ../memory describe --tags` |
+| Pins: octant `#c1fe89b` (v0.4.1), memory `#64c0542` (v0.4.3) — while memory HEAD sits at `v0.4.3-21` (unreleased) | `grep -E '@balaur/octant\|balaur-memory' bun.lock \| head -4; git -C ../memory describe --tags` |
 | `bunx balaur` still resolves (the pin ships the CLI; gone at memory HEAD) | `cd /home/alex/projects/balaur/web && bunx balaur --help \| head -2` |
 | pi locked at 0.55.4 (`^0.55.0`) | `grep 'pi-coding-agent@' bun.lock` |
 | `ExtensionUIContext` exported by pi | `grep -c ExtensionUIContext apps/web/node_modules/@mariozechner/pi-coding-agent/dist/index.d.ts` |
@@ -242,5 +274,5 @@ Machine-specific facts above (ports 8080/6001/8090, `~/.bun/bin/bun`, checkout p
 | Nothing imports the vestigial names | `grep -rn '@balaur/\(ui\|tokens\|octant-core\)' apps test --include='*.ts*'` |
 | `auth.json` still empty (`{}`) | `cat apps/web/.balaur-agent/auth.json` |
 | Route table / config vars unchanged | `grep -n 'pathname ===\|process.env' apps/web/src/server.tsx` |
-| One test file | `ls test/` |
+| Two test files (links + memory-schema) | `ls test/` |
 | README still carries the stale bun-link section | `grep -n 'bun link' README.md` |

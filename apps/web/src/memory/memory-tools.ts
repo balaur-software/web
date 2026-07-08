@@ -1,6 +1,7 @@
 import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
 import { type Static, type TSchema, Type } from "@sinclair/typebox";
 import { MemoryError, type Node, type NodeId, type Store } from "balaur-memory";
+import { PROPOSABLE_TYPES } from "./schema.ts";
 
 /**
  * The agent's memory verbs — and ONLY the agent's (INTEGRATIONS.md Surface 1):
@@ -76,7 +77,9 @@ export function memoryTools(store: Store, opts: MemoryToolOptions): ToolDefiniti
         "When the owner states a durable fact, task, or preference, propose it.",
       ],
       parameters: Type.Object({
-        type: Type.Union([Type.Literal("task"), Type.Literal("memory"), Type.Literal("preference")]),
+        // Derived from the store's registered vocabulary (schema.ts) so the
+        // tool can never offer a type the store would refuse.
+        type: Type.Union(PROPOSABLE_TYPES.map((t) => Type.Literal(t))),
         title: Type.String({ description: "short, deduplicatable statement of the fact/task" }),
         body: Type.Optional(Type.String({ description: "detail/context" })),
         importance: Type.Optional(Type.Number({ minimum: 1, maximum: 5 })),
