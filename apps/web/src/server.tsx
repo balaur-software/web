@@ -215,6 +215,8 @@ const { session } = await createAgentSession({
   // Bash could reach the owner's CLI (`bunx balaur decide`) and walk around
   // the consent gate — the tool split IS the gate's wire integrity.
   tools: [],
+  // origin is a constant: tools are built before any session exists, and
+  // sessionId rotates on new_session while a captured origin would not.
   customTools: memoryTools(store, { origin: "web-chat", onQueueChange: () => queueChanged() }),
 });
 

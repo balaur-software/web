@@ -4,7 +4,7 @@
   "description": "Bun-native SSR React web GUI for the pi coding agent, accessed securely via SSH tunnel.",
   "type": "module",
   "scripts": {
-    "dev": "PORT=6001 bun --watch run src/server.tsx",
+    "dev": "BALAUR_STORE_DIR=/tmp/balaur-dev-store PORT=6001 bun --watch run src/server.tsx",
     "start": "NODE_ENV=production bun run src/server.tsx",
     "typecheck": "tsc --noEmit"
   },
