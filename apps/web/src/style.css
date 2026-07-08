@@ -26,6 +26,26 @@ body {
   overflow: hidden;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/*
+ * Workaround for a min-height:0 gap in @balaur/octant@v0.4.1's ChatPanel/
+ * ChatThread: their internal thread+composer flex column (and ChatThread's
+ * own wrapper) never constrained their cross size, so a tall message grew
+ * the column past its container instead of scrolling inside ChatThread,
+ * pushing the composer below the fold. min-height: 0 is a no-op on
+ * non-flex ancestors, so this only affects the flex items that need it.
+ * Fixed upstream in design (ChatPanel.tsx / ChatThread.tsx) — drop this
+ * once web bumps its @balaur/octant pin past v0.4.1 to a release with the fix.
+ */
+div:has([role="log"]) {
+  min-height: 0;
+}
+
 /*
  * highlight.js token colours (from /hljs.css) are kept, but the theme's own
  * block background/padding are dropped so the highlighted <span> sits flush
